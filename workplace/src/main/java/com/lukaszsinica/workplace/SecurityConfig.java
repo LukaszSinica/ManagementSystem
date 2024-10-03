@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,33 +16,41 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 
 @Configuration
 @EnableWebSecurity
+@EnableJdbcHttpSession
 public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http
-			.authorizeHttpRequests((authorize) -> authorize
-				.anyRequest().authenticated()
-			)
-			.httpBasic(Customizer.withDefaults())
-			.formLogin(Customizer.withDefaults());
+        http
+            .authorizeHttpRequests((authorize) -> authorize
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults())
+            .formLogin(Customizer.withDefaults())
+            .sessionManagement((session) -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .sessionFixation().migrateSession()
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(true)
+            );
 
-		return http.build();
-	}
+        return http.build();
+    }
 
     @Bean
-    UserDetailsManager users(DataSource dataSource) {
+    UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
     	UserDetails user = User.builder()
     		.username("user")
-    		.password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+    		.password(passwordEncoder.encode("password"))
     		.roles("USER")
     		.build();
     	UserDetails admin = User.builder()
     		.username("admin")
-    		.password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+    		.password(passwordEncoder.encode("password"))
     		.roles("USER", "ADMIN")
     		.build();
     	JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
