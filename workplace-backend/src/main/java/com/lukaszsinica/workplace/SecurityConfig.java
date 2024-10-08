@@ -36,6 +36,10 @@ public class SecurityConfig {
                 .sessionFixation().migrateSession()
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(true)
+            )
+            .formLogin(form -> form
+        			.loginPage("/login")
+        			.permitAll()
             );
 
         return http.build();
