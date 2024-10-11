@@ -13,6 +13,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/lib/AuthContext"
+import { useNavigate } from "react-router-dom"
  
 const FormSchema = z.object({
   username: z.string().min(2, {
@@ -24,6 +26,9 @@ const FormSchema = z.object({
 })
  
 export function LoginComponent() {
+  
+  const auth = useAuth();
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -41,6 +46,10 @@ export function LoginComponent() {
         </pre>
       ),
     })
+    if (data.username === "admin" && data.password === "password") {
+      auth?.setIsAuthenticated(true)
+      navigate('/home');
+    }
   }
  
   return (
@@ -53,7 +62,7 @@ export function LoginComponent() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="username" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

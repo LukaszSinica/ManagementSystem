@@ -1,15 +1,23 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 import { LoginComponent } from './components/login/LoginComponent'
 import { Toaster } from './components/ui/toaster'
+import { AuthProvider } from './lib/AuthContext'
+import Home from './components/home/Home'
 
 function App() {
 
   return (
-    <>
-      <LoginComponent/>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<LoginComponent/>}/>
+          <Route path='/login' element={<LoginComponent/>}/>
+          <Route path='/home' element={<Home/>}/>
+        </Routes>
+      </BrowserRouter>
       <Toaster />
-
-    </>
+    </AuthProvider>
   )
 }
 
