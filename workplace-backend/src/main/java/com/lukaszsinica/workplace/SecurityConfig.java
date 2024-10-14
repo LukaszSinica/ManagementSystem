@@ -5,17 +5,23 @@ import javax.sql.DataSource;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 
 @Configuration
@@ -31,15 +37,12 @@ public class SecurityConfig {
             )
             .httpBasic(Customizer.withDefaults())
             .formLogin(Customizer.withDefaults())
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement((session) -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .sessionFixation().migrateSession()
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(true)
-            )
-            .formLogin(form -> form
-        			.loginPage("/login")
-        			.permitAll()
             );
 
         return http.build();
@@ -47,20 +50,37 @@ public class SecurityConfig {
 
     @Bean
     UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
-    	UserDetails user = User.builder()
-    		.username("user")
-    		.password(passwordEncoder.encode("password"))
-    		.roles("USER")
-    		.build();
-    	UserDetails admin = User.builder()
-    		.username("admin")
-    		.password(passwordEncoder.encode("password"))
-    		.roles("USER", "ADMIN")
-    		.build();
-    	JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
-    	users.createUser(user);
-    	users.createUser(admin);
-    	return users;
+        JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
+
+        if (userDetailsManager.userExists("user")) {
+            userDetailsManager.deleteUser("user"); 
+        }
+        if (userDetailsManager.userExists("admin")) {
+        	userDetailsManager.deleteUser("admin");
+        }
+        UserDetails user = User.builder()
+            .username("user")
+            .password(passwordEncoder.encode("password"))
+            .roles("USER")
+            .build();
+        userDetailsManager.createUser(user);
+
+        UserDetails admin = User.builder()
+            .username("admin")
+            .password(passwordEncoder.encode("password"))
+            .roles("USER", "ADMIN")
+            .build();
+        userDetailsManager.createUser(admin);
+
+        return userDetailsManager;
+    }
+    
+    @Bean
+    AuthenticationManager authenticationManager(
+            UserDetailsService userDetailsService) {
+        var authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userDetailsService);
+        return new ProviderManager(authenticationProvider);
     }
     
     @Bean

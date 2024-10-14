@@ -46,10 +46,26 @@ export function LoginComponent() {
         </pre>
       ),
     })
-    if (data.username === "admin" && data.password === "password") {
-      auth?.setIsAuthenticated(true)
-      navigate('/home');
-    }
+    const formData = new URLSearchParams();
+    formData.append("username", data.username);
+    formData.append("password", data.password);
+  
+    fetch('http://localhost:8080/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData
+    })
+    .then(response => {
+      if (response.ok) {
+        auth?.setIsAuthenticated(true);
+        navigate('/home');
+      } else {
+        console.log("Login failed");
+      }
+    })
+    .catch(error => console.error("Error:", error));
   }
  
   return (
