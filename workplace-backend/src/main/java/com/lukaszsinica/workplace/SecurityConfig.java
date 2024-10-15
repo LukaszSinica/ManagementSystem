@@ -29,72 +29,58 @@ import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHtt
 @EnableJdbcHttpSession
 public class SecurityConfig {
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests((authorize) -> authorize
-                .anyRequest().authenticated()
-            )
-            .httpBasic(Customizer.withDefaults())
-            .formLogin(Customizer.withDefaults())
-            .cors(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement((session) -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(true)
-            );
+	@Bean
+	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
+				.httpBasic(Customizer.withDefaults()).formLogin(Customizer.withDefaults())
+				.cors(Customizer.withDefaults()).csrf(csrf -> csrf.disable())
+				.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+						.maximumSessions(1).maxSessionsPreventsLogin(true))
+				.formLogin(Customizer.withDefaults());
 
-        return http.build();
-    }
+		return http.build();
+	}
 
-    @Bean
-    UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
-        JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
+	@Bean
+	UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
+		JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
 
-        if (userDetailsManager.userExists("user")) {
-            userDetailsManager.deleteUser("user"); 
-        }
-        if (userDetailsManager.userExists("admin")) {
-        	userDetailsManager.deleteUser("admin");
-        }
-        UserDetails user = User.builder()
-            .username("user")
-            .password(passwordEncoder.encode("password"))
-            .roles("USER")
-            .build();
-        userDetailsManager.createUser(user);
+		if (userDetailsManager.userExists("user")) {
+			userDetailsManager.deleteUser("user");
+		}
+		
+		if (userDetailsManager.userExists("admin")) {
+			userDetailsManager.deleteUser("admin");
+		}
+		UserDetails user = User.builder().username("user").password(passwordEncoder.encode("password")).roles("USER")
+				.build();
+		userDetailsManager.createUser(user);
 
-        UserDetails admin = User.builder()
-            .username("admin")
-            .password(passwordEncoder.encode("password"))
-            .roles("USER", "ADMIN")
-            .build();
-        userDetailsManager.createUser(admin);
+		UserDetails admin = User.builder().username("admin").password(passwordEncoder.encode("password"))
+				.roles("USER", "ADMIN").build();
+		userDetailsManager.createUser(admin);
 
-        return userDetailsManager;
-    }
-    
-    @Bean
-    AuthenticationManager authenticationManager(
-            UserDetailsService userDetailsService) {
-        var authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
-        return new ProviderManager(authenticationProvider);
-    }
-    
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-    
-    @Bean
-    DataSource dataSource() {
-    	  return DataSourceBuilder.create()
-    	            .driverClassName("com.mysql.cj.jdbc.Driver")
-    	            .url("jdbc:mysql://localhost:3306/workplace")
-    	            .username("workplace-user")
-    	            .password("password")
-    	            .build();
-    }
+		return userDetailsManager;
+	}
+
+	@Bean
+	AuthenticationManager authenticationManager(UserDetailsService userDetailsService,
+			PasswordEncoder passwordEncoder) {
+		DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+		authenticationProvider.setUserDetailsService(userDetailsService);
+		authenticationProvider.setPasswordEncoder(passwordEncoder);
+
+		return new ProviderManager(authenticationProvider);
+	}
+
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	DataSource dataSource() {
+		return DataSourceBuilder.create().driverClassName("com.mysql.cj.jdbc.Driver")
+				.url("jdbc:mysql://localhost:3306/workplace").username("workplace-user").password("password").build();
+	}
 }

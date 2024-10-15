@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DefaultController {
 	
 	@PostMapping("/login")
-	public String login(@RequestParam("username") String username) {
+	public void login(@RequestParam String username) {
 	    System.out.println("Username submitted: " + username);
-	    return "redirect:/home";
 	}
 }

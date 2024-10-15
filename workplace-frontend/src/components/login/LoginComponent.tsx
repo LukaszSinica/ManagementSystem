@@ -46,16 +46,14 @@ export function LoginComponent() {
         </pre>
       ),
     })
-    const formData = new URLSearchParams();
-    formData.append("username", data.username);
-    formData.append("password", data.password);
   
     fetch('http://localhost:8080/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
+        'Origin': 'http://localhost:5173'
       },
-      body: formData
+      body: JSON.stringify(data),
     })
     .then(response => {
       if (response.ok) {
