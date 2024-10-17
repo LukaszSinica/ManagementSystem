@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { useAuth } from "@/lib/AuthContext"
+import { useAuth } from "../../lib/AuthContext"
 import { useNavigate } from "react-router-dom"
  
 const FormSchema = z.object({
@@ -37,7 +37,7 @@ export function LoginComponent() {
     },
   })
  
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
     toast({
       title: "You submitted the following values:",
       description: (
@@ -46,24 +46,19 @@ export function LoginComponent() {
         </pre>
       ),
     })
-  
-    fetch('http://localhost:8080/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'http://localhost:5173'
-      },
-      body: JSON.stringify(data),
-    })
-    .then(response => {
-      if (response.ok) {
-        auth?.setIsAuthenticated(true);
-        navigate('/home');
-      } else {
-        console.log("Login failed");
-      }
-    })
-    .catch(error => console.error("Error:", error));
+    try {
+      await auth?.login(data.username, data.password)
+      navigate("/home");
+    } catch (error) {
+      toast({
+        title: "Failed to login. Please try again.",
+        description: (
+          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+          </pre>
+        ),
+      })
+    }
   }
  
   return (

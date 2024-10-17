@@ -13,15 +13,4 @@ public class WorkplaceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(WorkplaceApplication.class, args);
 	}
-	
-	@Bean
-	WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")
-					.allowedMethods("*")
-					.allowedOrigins("http://localhost:5173");
-			}
-		};
-	}
 }
