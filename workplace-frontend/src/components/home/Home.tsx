@@ -6,15 +6,9 @@ export default function Home() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const onLogout = () => {
-    auth?.logout();
-    navigate('/');
-  }
-
   return (
-    <div>
-      Home
-      <Button onClick={() => onLogout()}>Logout</Button>
-    </div>
+    <main className="flex justify-center items-center">
+      welcome {auth.username}!
+    </main>
   )
 }

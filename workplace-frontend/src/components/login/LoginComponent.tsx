@@ -63,7 +63,7 @@ export function LoginComponent() {
  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-1/3 space-y-6 mx-auto my-0">
         <FormField
           control={form.control}
           name="username"
