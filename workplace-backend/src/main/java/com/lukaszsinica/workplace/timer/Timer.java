@@ -2,6 +2,7 @@ package com.lukaszsinica.workplace.timer;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,17 +18,16 @@ public class Timer {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 	private String username;
-	private Date date;
-	private Timestamp timestamp;
+	private LocalDate date;
+	private Long time;
 	
 	protected Timer() {}
 
-	public Timer(Integer id, String username, Date date, Timestamp timestamp) {
+	public Timer(String username, LocalDate date, Long time) {
 		super();
-		this.id = id;
 		this.username = username;
 		this.date = date;
-		this.timestamp = timestamp;
+		this.time = time;
 	}
 	
 	public Integer getId() {
@@ -42,22 +42,22 @@ public class Timer {
 	public void setUsername(String username) {
 		this.username = username;
 	}
-	public Date getDate() {
+	public LocalDate getDate() {
 		return date;
 	}
-	public void setDate(Date date) {
+	public void setDate(LocalDate date) {
 		this.date = date;
 	}
-	public Timestamp getTimestamp() {
-		return timestamp;
+	public Long getTime() {
+		return time;
 	}
-	public void setTimestamp(Timestamp timestamp) {
-		this.timestamp = timestamp;
+	public void setTime(Long time) {
+		this.time = time;
 	}
 
 	@Override
 	public String toString() {
-		return "Timer [id=" + id + ", username=" + username + ", date=" + date + ", timestamp=" + timestamp + "]";
+		return "Timer [id=" + id + ", username=" + username + ", date=" + date + ", timestamp=" + time + "]";
 	}
 	
 	

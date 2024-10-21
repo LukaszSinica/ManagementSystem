@@ -1,13 +1,16 @@
 import { useRef, useState } from "react";
 import { Button } from "../ui/button";
+import { useAuth } from "@/lib/AuthContext";
+import { addTimerForUsername } from "@/api/timerApi";
+import { toast } from "@/hooks/use-toast";
 
 export default function Timer() {
+    const auth = useAuth();
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
   
     const handleClick = () => {
-        handleReset();
         if (!isRunning) {
             setIsRunning(true);
             timerRef.current = setInterval(() => {
@@ -16,13 +19,33 @@ export default function Timer() {
         } else {
             setIsRunning(false);
             if (timerRef.current) {
-            clearInterval(timerRef.current);
+                clearInterval(timerRef.current);
             }
+            if(auth.username && auth.token) {
+                addTimerForUsername(auth.username, auth.token, time).then(() => 
+                    toast({
+                        title: "Time was added successfully",
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">{JSON.stringify(time)}</code>
+                          </pre>
+                        ),
+                      })
+                ).catch(() => 
+                    toast({
+                        title: "Time was not added",
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">{JSON.stringify(time)}</code>
+                          </pre>
+                        ),
+                }))
+            }
+            handleReset();
         }
     };
   
     const handleReset = () => {
-        console.log(time);
         setIsRunning(false);
         setTime(0);
         if (timerRef.current) {
@@ -41,8 +64,10 @@ export default function Timer() {
     };
 
     return (
-        <main className="flex flex-col w-1/5 items-center mx-auto">
-            <Button onClick={handleClick}>{isRunning ? "Stop working" : "Start working"}</Button>
+        <main className="flex flex-col w-2/5 items-center mx-auto">
+            <div>
+                <Button onClick={handleClick} className="mx-4">{isRunning ? "Stop working" : "Start working"}</Button>
+            </div>
             {formatTime(time)}
         </main>
     )
