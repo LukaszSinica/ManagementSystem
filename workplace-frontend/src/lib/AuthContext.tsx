@@ -6,8 +6,8 @@ type AuthContextType = {
     isAuthenticated: boolean,
     login: (username: string, password: string) => Promise<boolean>,
     logout: () => void,
-    username: string | null,
-    token: string | null
+    username: string,
+    token: string
 };
 
 
@@ -16,9 +16,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isAuthenticated, setAuthenticated] = useState(false)
 
-    const [username, setUsername] = useState<string | null>(null)
+    const [username, setUsername] = useState<string>("")
 
-    const [token, setToken] = useState<string | null>(null)
+    const [token, setToken] = useState<string>("")
 
     const login = async (username: string, password: string) => {    
         try {
@@ -53,8 +53,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const logout = () => {
         setAuthenticated(false)
-        setToken(null)
-        setUsername(null)
+        setToken("")
+        setUsername("")
     };
 
     return (

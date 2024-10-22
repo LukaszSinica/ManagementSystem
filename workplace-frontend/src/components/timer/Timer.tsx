@@ -1,15 +1,22 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import { addTimerForUsername } from "@/api/timerApi";
-import { toast } from "@/hooks/use-toast";
+import { addTimerForUsername, retrieveALlTimersForUsername, TimerResponseDataType } from "@/api/TimerApi";
+import { TimerSuccessfulToast, TimerUnsuccessfulToast } from "./TimerToasts";
+import { formatTime, timerDataTableColumns } from "./TimerUtils";
+import { DataTable } from "./TimerDataTable";
 
 export default function Timer() {
     const auth = useAuth();
     const [isRunning, setIsRunning] = useState(false);
     const [time, setTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
+    const [timerData, setTimerData] = useState<TimerResponseDataType[]>([]);
+    
+    useEffect(() => {
+        retrieveALlTimersForUsername(auth.username, auth.token).then((timers) => setTimerData(timers));
+    }, [auth.username, auth.token])
+
     const handleClick = () => {
         if (!isRunning) {
             setIsRunning(true);
@@ -23,23 +30,10 @@ export default function Timer() {
             }
             if(auth.username && auth.token) {
                 addTimerForUsername(auth.username, auth.token, time).then(() => 
-                    toast({
-                        title: "Time was added successfully",
-                        description: (
-                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                            <code className="text-white">{JSON.stringify(time)}</code>
-                          </pre>
-                        ),
-                      })
+                    TimerSuccessfulToast(formatTime(time))
                 ).catch(() => 
-                    toast({
-                        title: "Time was not added",
-                        description: (
-                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                            <code className="text-white">{JSON.stringify(time)}</code>
-                          </pre>
-                        ),
-                }))
+                    TimerUnsuccessfulToast(formatTime(time))
+                )
             }
             handleReset();
         }
@@ -52,16 +46,6 @@ export default function Timer() {
             clearInterval(timerRef.current);
         }
     };
-  
-    // Function to format time into hh:mm:ss
-    const formatTime = (totalSeconds: number) => {
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-    
-        const format = (unit: number) => String(unit).padStart(2, '0');
-        return `${format(hours)}:${format(minutes)}:${format(seconds)}`;
-    };
 
     return (
         <main className="flex flex-col w-2/5 items-center mx-auto">
@@ -69,6 +53,11 @@ export default function Timer() {
                 <Button onClick={handleClick} className="mx-4">{isRunning ? "Stop working" : "Start working"}</Button>
             </div>
             {formatTime(time)}
+            <div>
+                {timerData.length > 0 &&
+                    <DataTable columns={timerDataTableColumns} data={timerData}/>
+                }
+            </div>
         </main>
     )
 }
