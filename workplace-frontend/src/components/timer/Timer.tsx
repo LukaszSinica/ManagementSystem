@@ -29,8 +29,10 @@ export default function Timer() {
                 clearInterval(timerRef.current);
             }
             if(auth.username && auth.token) {
-                addTimerForUsername(auth.username, auth.token, time).then(() => 
+                addTimerForUsername(auth.username, auth.token, time).then(() => {
+                    retrieveALlTimersForUsername(auth.username, auth.token).then((timers) => setTimerData(timers));
                     TimerSuccessfulToast(formatTime(time))
+                }
                 ).catch(() => 
                     TimerUnsuccessfulToast(formatTime(time))
                 )

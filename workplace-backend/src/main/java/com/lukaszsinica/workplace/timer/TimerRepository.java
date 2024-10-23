@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TimerRepository extends CrudRepository<com.lukaszsinica.workplace.timer.Timer, Integer> {
+public interface TimerRepository extends CrudRepository<com.lukaszsinica.workplace.timer.Timer, Long> {
 	List<com.lukaszsinica.workplace.timer.Timer> findByUsername(String username);
-	Optional<Timer> findById(Integer id);
+	Optional<Timer> findById(Long id);
 }
