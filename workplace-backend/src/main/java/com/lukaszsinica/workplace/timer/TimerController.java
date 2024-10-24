@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,12 +49,21 @@ public class TimerController {
 	}
 	
 	@DeleteMapping("/timer/{username}/{id}")
-	private ResponseEntity<String> deleteUserTimerById(@PathVariable String username, @PathVariable String id) {
+	private ResponseEntity<String> deleteUserTimerById(@PathVariable String username, @PathVariable Long id) {
+		Optional<Timer> userTimerOpt  = timerRepository.findById(id);
 		
-		
-		
-		return ResponseEntity.ok("timer was removed successfully");
+	    if (userTimerOpt .isEmpty()) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Timer not found");
+	    }
+	    
+	    Timer userTimer = userTimerOpt.get();
 
+		System.out.println(userTimer);
+		if(userTimer.getUsername() != null && userTimer.getUsername().equals(username)) { 
+			timerRepository.deleteById(id);
+			return ResponseEntity.ok("timer was removed successfully");
+		} 			
+		return ResponseEntity.badRequest().body("timer was not removed");
 	}
 }
 

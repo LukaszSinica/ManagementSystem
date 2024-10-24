@@ -25,3 +25,5 @@ export const retrieveALlTimersForUsername = (username: string, token: string) =>
 export const addTimerForUsername = (username: string, token: string, time: Number) =>
     apiClient.post(`/timer/${username}`, {time}, { headers: { 'Authorization': token}})
 
+export const deleteTimerByIdForUsername = (username: string, token: string, id: number) => 
+    apiClient.delete(`/timer/${username}/${id}`, { headers: { 'Authorization': token}})
