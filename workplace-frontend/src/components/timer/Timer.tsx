@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUsername, TimerResponseDataType } from "@/api/TimerApi";
-import { TimerSuccessfulToast, TimerUnsuccessfulToast } from "./TimerToasts";
+import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUsername, TimerResponseDataType, updateTimerForUsername } from "@/api/TimerApi";
+import { DefaultSuccessfulToast, DefaultUnsuccessfulToast, TimerSuccessfulToast, TimerUnsuccessfulToast } from "./TimerToasts";
 import { formatTime } from "./TimerUtils";
 import { DataTable } from "./TimerDataTable";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
+import React from "react";
+import { toast } from "@/hooks/use-toast";
+
+type EditableRows = {
+  [key: string]: boolean;
+};
 
 export default function Timer() {
     const auth = useAuth();
@@ -16,7 +22,7 @@ export default function Timer() {
     const [time, setTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const [timerData, setTimerData] = useState<TimerResponseDataType[]>([]);
-    const [editableRows, setEditableRows] = useState({});
+    const [editableRows, setEditableRows] = useState<EditableRows>({});
 
     useEffect(() => {
         retrieveALlTimersForUsername(auth.username, auth.token).then((timers) => setTimerData(timers));
@@ -53,6 +59,43 @@ export default function Timer() {
             clearInterval(timerRef.current);
         }
     };
+
+    const editTimer = (e: React.ChangeEvent<HTMLInputElement>, rowId: number) => {
+      const { id, value } = e.currentTarget;
+      setTimerData(prevData => prevData.map(timer =>
+          timer.id === rowId ? { ...timer, [id]: new Date(value) } : timer
+      ));
+    };
+
+    const saveEdit = (id: number) => {
+      const updatedTimer = timerData.find(timer => timer.id === id);
+
+      if (!updatedTimer) return;
+
+      if (updatedTimer.from_time > updatedTimer.to_time) {
+        return toast({
+          title: "Time was not added",
+          description: (
+            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+              <code className="text-white">{time}</code>
+            </pre>
+          ),
+        })
+      }
+
+      if (auth.username && auth.token) {
+        updateTimerForUsername(auth.username, auth.token, updatedTimer).then(() => {
+          DefaultSuccessfulToast(updatedTimer, "Timer updated successfully");
+              setEditableRows(prev => {
+                  const updated = { ...prev };
+                  delete updated[id];
+                  return updated;
+              });
+          }).catch(() => {
+            DefaultUnsuccessfulToast(`${updatedTimer.from_time} : ${updatedTimer.to_time}`,"Failed to update timer");
+          });
+      }
+  };
 
     const timerDataTableColumns: ColumnDef<TimerResponseDataType>[] = [
         {
@@ -92,10 +135,9 @@ export default function Timer() {
           header: "From time",
           cell: ({ row }) => {
             const isEditable = row.original.id in editableRows;
-            if(isEditable) {
-                return <Input type="time" value={row.original.from_time.toString()}/>
-            }
-            return row.original.from_time;
+    
+            return isEditable ? <Input id="from_time" type="time" defaultValue={row.original.from_time.toString()} onChange={(e) => editTimer(e, row.original.id)}/>
+              : row.original.from_time;
           }
         },
         {
@@ -103,10 +145,9 @@ export default function Timer() {
           header: "To time",
           cell: ({ row }) => {
             const isEditable = row.original.id in editableRows;
-            if(isEditable) {
-                return <Input type="time" value={row.original.to_time.toString()}/>
-            }
-            return row.original.to_time;
+
+            return isEditable ? <Input id="to_time" type="time" defaultValue={row.original.to_time.toString()} onChange={(e) => editTimer(e, row.original.id)}/>
+              : row.original.to_time;
           }
         },
         {
@@ -114,14 +155,16 @@ export default function Timer() {
           header: "Action",
           cell: ({ row }) => {
 
-            const timer = row.original
- 
-              function editRow(id: number): void {
-                setEditableRows(prevState => ({
-                    ...prevState,
-                    [id]: true,
-                }));
-              }
+            const timer = row.original;            
+            const isEditable = timer.id in editableRows;
+
+            function disableRowEditing(): void {
+              setEditableRows(prevState => {
+                const updatedState = { ...prevState };
+                delete updatedState[timer.id];
+                return updatedState;
+              });
+            }
 
             return (
               <DropdownMenu>
@@ -145,12 +188,22 @@ export default function Timer() {
                   >
                     Delete
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => editRow(timer.id)}
-                  >
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  {isEditable ? 
+                    <>
+                      <DropdownMenuItem onClick={() => saveEdit(row.original.id)}>Save</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => disableRowEditing()}>Stop editing</DropdownMenuItem>
+                    </>
+                    :
+                    <DropdownMenuItem onClick={() => {
+                        setEditableRows(prevState => ({
+                          ...prevState,
+                          [timer.id]: true,
+                        }));
+                      }}
+                    > 
+                      Edit
+                    </DropdownMenuItem>
+                  }
                 </DropdownMenuContent>
               </DropdownMenu>
           )
