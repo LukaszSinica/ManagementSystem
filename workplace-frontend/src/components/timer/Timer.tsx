@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUsername, TimerResponseDataType, updateTimerForUsername } from "@/api/TimerApi";
+import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUsername, TimerGetResponseDataTypeAfterRequest, TimerResponseDataType, updateTimerForUsername } from "@/api/TimerApi";
 import { DefaultSuccessfulToast, DefaultUnsuccessfulToast, TimerSuccessfulToast, TimerUnsuccessfulToast } from "./TimerToasts";
 import { formatTime } from "./TimerUtils";
 import { DataTable } from "./TimerDataTable";
@@ -62,8 +62,9 @@ export default function Timer() {
 
     const editTimer = (e: React.ChangeEvent<HTMLInputElement>, rowId: number) => {
       const { id, value } = e.currentTarget;
+      console.log(timerData);
       setTimerData(prevData => prevData.map(timer =>
-          timer.id === rowId ? { ...timer, [id]: new Date(value) } : timer
+          timer.id === rowId ? { ...timer, [id]: value } : timer
       ));
     };
 
@@ -82,7 +83,7 @@ export default function Timer() {
           ),
         })
       }
-
+    
       if (auth.username && auth.token) {
         updateTimerForUsername(auth.username, auth.token, updatedTimer).then(() => {
           DefaultSuccessfulToast(updatedTimer, "Timer updated successfully");
@@ -97,7 +98,7 @@ export default function Timer() {
       }
   };
 
-    const timerDataTableColumns: ColumnDef<TimerResponseDataType>[] = [
+    const timerDataTableColumns: ColumnDef<TimerGetResponseDataTypeAfterRequest>[] = [
         {
           accessorKey: "id",
           header: ({ column }) => {
@@ -125,6 +126,14 @@ export default function Timer() {
               </Button>
             )
           },
+          cell: ({ row }) => {
+            const isEditable = row.original.id in editableRows;
+            let [day, month, year] = row.original.date.split(".");
+            let formattedDate = `${year}-${month}-${day}`;
+
+            return isEditable ? <Input id="date" type="date" value={formattedDate} onChange={(e) => editTimer(e, row.original.id)}/>
+              : row.original.date;
+          }
         },
         {
           accessorKey: "time",

@@ -21,3 +21,25 @@ export function TimerUnsuccessfulToast(time: string) {
         ),
   })
 }
+
+export function DefaultSuccessfulToast(message: Object, title: string) {
+  return toast({
+    title: title,
+    description: (
+      <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+        <code className="text-white">{JSON.stringify(message)}</code>
+      </pre>
+    ),
+})
+}
+
+export function DefaultUnsuccessfulToast(message: string, title: string) {
+  return toast({
+    title: title,
+    description: (
+      <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+        <code className="text-white">{message}</code>
+      </pre>
+    ),
+})
+}

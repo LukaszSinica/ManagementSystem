@@ -10,6 +10,21 @@ export type TimerResponseDataType = {
     to_time: Date,
 }
 
+export type TimerGetResponseDataTypeAfterRequest = {
+    id: number,
+    username: string,
+    date: string,
+    time: string,
+    from_time: string,
+    to_time: string,
+}
+
+export type TimerPutRequestDataType = {
+    id: number,
+    from_time: Date,
+    to_time: Date,
+}
+
 export const retrieveALlTimersForUsername = (username: string, token: string) => 
     apiClient.get<TimerResponseDataType[]>(`/timer/${username}`, { headers: { 'Authorization': token}}).then(response => {
         return response.data.map(timer => ({
@@ -27,3 +42,7 @@ export const addTimerForUsername = (username: string, token: string, time: Numbe
 
 export const deleteTimerByIdForUsername = (username: string, token: string, id: number) => 
     apiClient.delete(`/timer/${username}/${id}`, { headers: { 'Authorization': token}})
+
+export const updateTimerForUsername = (username: string, token: string, timer: TimerPutRequestDataType) => 
+    apiClient.put(`/timer/${username}/${timer.id}`, timer, { headers: { 'Authorization': token}})
+
