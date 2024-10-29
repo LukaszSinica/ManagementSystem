@@ -10,26 +10,18 @@ export type TimerResponseDataType = {
     to_time: Date,
 }
 
-export type TimerGetResponseDataTypeAfterRequest = {
-    id: number,
-    username: string,
-    date: string,
-    time: string,
-    from_time: string,
-    to_time: string,
-}
-
 export type TimerPutRequestDataType = {
     id: number,
-    from_time: Date,
-    to_time: Date,
+    date: string,
+    from_time: string,
+    to_time: string,
 }
 
 export const retrieveALlTimersForUsername = (username: string, token: string) => 
     apiClient.get<TimerResponseDataType[]>(`/timer/${username}`, { headers: { 'Authorization': token}}).then(response => {
         return response.data.map(timer => ({
             ...timer,
-            date: new Date(timer.date).toLocaleDateString(),
+            date: new Date(timer.date).toISOString().slice(0, 10),
             time: formatTime(timer.time),
             from_time: new Date(timer.from_time).toLocaleTimeString(),
             to_time: new Date(timer.to_time).toLocaleTimeString(),

@@ -1,8 +1,11 @@
 package com.lukaszsinica.workplace.timer;
 
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -79,9 +82,28 @@ public class TimerController {
 	    Timer userTimer = userTimerOpt.get();
 
 		if(userTimer.getUsername() != null && userTimer.getUsername().equals(username)) { 
-			userTimer.setFrom_time(request.fromTime());
-			userTimer.setTo_time(request.toTime());
-			userTimer.setTime(timerService.calculateDifferenceInSeconds(request.fromTime(), request.toTime()));
+            // Define formatters for date and time parts
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+            // Parse date and time components
+            LocalDate parsedDate = LocalDate.parse(request.date(), dateFormatter);
+            LocalTime parsedFromTime = LocalTime.parse(request.from_time(), timeFormatter);
+            LocalTime parsedToTime = LocalTime.parse(request.to_time(), timeFormatter);
+
+            // Combine date and time parts into LocalDateTime, then convert to Timestamp
+            LocalDateTime fromDateTime = LocalDateTime.of(parsedDate, parsedFromTime);
+            LocalDateTime toDateTime = LocalDateTime.of(parsedDate, parsedToTime);
+
+            Timestamp fromTime = Timestamp.valueOf(fromDateTime);
+            Timestamp toTime = Timestamp.valueOf(toDateTime);
+
+            // Set timestamps and calculate time difference
+            userTimer.setFrom_time(fromTime);
+            userTimer.setTo_time(toTime);
+            userTimer.setDate(parsedDate);
+            long durationInSeconds = Duration.between(fromDateTime, toDateTime).getSeconds();
+            userTimer.setTime(durationInSeconds);
 			timerRepository.save(userTimer);
 			return ResponseEntity.ok("Timer was updated successfully");
 		} 			

@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUsername, TimerGetResponseDataTypeAfterRequest, TimerResponseDataType, updateTimerForUsername } from "@/api/TimerApi";
+import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUsername, TimerResponseDataType, updateTimerForUsername } from "@/api/TimerApi";
 import { DefaultSuccessfulToast, DefaultUnsuccessfulToast, TimerSuccessfulToast, TimerUnsuccessfulToast } from "./TimerToasts";
 import { formatTime } from "./TimerUtils";
 import { DataTable } from "./TimerDataTable";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, CalendarIcon, MoreHorizontal } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import React from "react";
 import { toast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar } from "../ui/calendar";
 
 type EditableRows = {
   [key: string]: boolean;
@@ -62,7 +66,6 @@ export default function Timer() {
 
     const editTimer = (e: React.ChangeEvent<HTMLInputElement>, rowId: number) => {
       const { id, value } = e.currentTarget;
-      console.log(timerData);
       setTimerData(prevData => prevData.map(timer =>
           timer.id === rowId ? { ...timer, [id]: value } : timer
       ));
@@ -85,7 +88,13 @@ export default function Timer() {
       }
     
       if (auth.username && auth.token) {
-        updateTimerForUsername(auth.username, auth.token, updatedTimer).then(() => {
+        const requestData = {
+          id: updatedTimer.id,
+          date: updatedTimer.date.toLocaleDateString(),
+          from_time: updatedTimer.from_time.toString(),
+          to_time: updatedTimer.to_time.toString(),
+        }
+        updateTimerForUsername(auth.username, auth.token, requestData).then(() => {
           DefaultSuccessfulToast(updatedTimer, "Timer updated successfully");
               setEditableRows(prev => {
                   const updated = { ...prev };
@@ -98,7 +107,7 @@ export default function Timer() {
       }
   };
 
-    const timerDataTableColumns: ColumnDef<TimerGetResponseDataTypeAfterRequest>[] = [
+    const timerDataTableColumns: ColumnDef<TimerResponseDataType>[] = [
         {
           accessorKey: "id",
           header: ({ column }) => {
@@ -127,11 +136,35 @@ export default function Timer() {
             )
           },
           cell: ({ row }) => {
+            const handleDateEdit = (date: Date) => {
+              setTimerData(prevData => prevData.map(timer =>
+                  timer.id === row.original.id? {...timer, date: date } : timer
+              ));
+            }
             const isEditable = row.original.id in editableRows;
-            let [day, month, year] = row.original.date.split(".");
-            let formattedDate = `${year}-${month}-${day}`;
-
-            return isEditable ? <Input id="date" type="date" value={formattedDate} onChange={(e) => editTimer(e, row.original.id)}/>
+            return isEditable ?  
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[280px] justify-start text-left font-normal",
+                    !row.original.date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {row.original.date ? format(row.original.date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={row.original.date}
+                  onSelect={handleDateEdit}
+                  initialFocus
+                />
+              </PopoverContent>
+          </Popover>
               : row.original.date;
           }
         },
