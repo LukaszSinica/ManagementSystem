@@ -5,18 +5,17 @@ import { addTimerForUsername, deleteTimerByIdForUsername, retrieveALlTimersForUs
 import { DefaultSuccessfulToast, DefaultUnsuccessfulToast, TimerSuccessfulToast, TimerUnsuccessfulToast } from "./TimerToasts";
 import { formatTime } from "./TimerUtils";
 import { DataTable } from "./TimerDataTable";
-import { ArrowUpDown, CalendarIcon, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import React from "react";
 import { toast } from "@/hooks/use-toast";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Calendar } from "../ui/calendar";
+import DatePicker from "./components/DatePicker";
+import TimerDropdownMenuContent from "./components/TimerDropdownMenuContent";
 
-type EditableRows = {
+export type EditableRows = {
   [key: string]: boolean;
 };
 
@@ -55,7 +54,13 @@ export default function Timer() {
             handleReset();
         }
     };
-  
+
+    const handleDateEdit = (selectedDay: Date, rowId: number) => {
+      setTimerData(prevData => prevData.map(timer =>
+          timer.id === rowId? {...timer, date: selectedDay } : timer
+      ));
+    }
+
     const handleReset = () => {
         setIsRunning(false);
         setTime(0);
@@ -88,9 +93,10 @@ export default function Timer() {
       }
     
       if (auth.username && auth.token) {
+        const date = new Date(updatedTimer.date)
         const requestData = {
           id: updatedTimer.id,
-          date: updatedTimer.date.toLocaleDateString(),
+          date: date.toLocaleDateString(),
           from_time: updatedTimer.from_time.toString(),
           to_time: updatedTimer.to_time.toString(),
         }
@@ -101,10 +107,34 @@ export default function Timer() {
                   delete updated[id];
                   return updated;
               });
+              retrieveALlTimersForUsername(auth.username, auth.token).then((timers) => setTimerData(timers));
           }).catch(() => {
             DefaultUnsuccessfulToast(`${updatedTimer.from_time} : ${updatedTimer.to_time}`,"Failed to update timer");
           });
       }
+  };
+
+  const handleDeleteTimer = (rowId: number) => {
+    deleteTimerByIdForUsername(auth.username, auth.token, rowId).then(() => {
+      retrieveALlTimersForUsername(auth.username, auth.token).then((timers) => setTimerData(timers));
+      TimerSuccessfulToast("Timer deleted successfully");
+    }).catch(() => TimerUnsuccessfulToast("Failed to delete timer")
+    );
+  };
+
+  function disableRowEditing(rowId: number): void {
+    setEditableRows(prevState => {
+      const updatedState = { ...prevState };
+      delete updatedState[rowId];
+      return updatedState;
+    });
+  }
+
+  const handleEditRow = (rowId: number) => {
+    setEditableRows(prevState => ({
+      ...prevState,
+      [rowId]: true,
+    }));
   };
 
     const timerDataTableColumns: ColumnDef<TimerResponseDataType>[] = [
@@ -136,41 +166,12 @@ export default function Timer() {
             )
           },
           cell: ({ row }) => {
-            const handleDateEdit = (date: Date) => {
-              setTimerData(prevData => prevData.map(timer =>
-                  timer.id === row.original.id? {...timer, date: date } : timer
-              ));
-            }
+            const formattedDate = format(new Date(row.original.date), "PPP");
             const isEditable = row.original.id in editableRows;
             return isEditable ?  
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[280px] justify-start text-left font-normal",
-                    !row.original.date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {row.original.date ? format(row.original.date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={row.original.date}
-                  onSelect={handleDateEdit}
-                  initialFocus
-                />
-              </PopoverContent>
-          </Popover>
-              : row.original.date;
+            <DatePicker formattedDate={formattedDate} rowId={row.original.id} handleDateEdit={handleDateEdit}/>
+              : formattedDate;
           }
-        },
-        {
-          accessorKey: "time",
-          header: "Worked time",
         },
         {
           accessorKey: "from_time",
@@ -193,20 +194,16 @@ export default function Timer() {
           }
         },
         {
+          accessorKey: "time",
+          header: "Worked time",
+        },
+        {
           accessorKey: "action",
           header: "Action",
           cell: ({ row }) => {
 
             const timer = row.original;            
             const isEditable = timer.id in editableRows;
-
-            function disableRowEditing(): void {
-              setEditableRows(prevState => {
-                const updatedState = { ...prevState };
-                delete updatedState[timer.id];
-                return updatedState;
-              });
-            }
 
             return (
               <DropdownMenu>
@@ -216,41 +213,19 @@ export default function Timer() {
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => {
-                        deleteTimerByIdForUsername(auth.username, auth.token, row.original.id).then(() => {
-                            retrieveALlTimersForUsername(auth.username, auth.token).then((timers) => setTimerData(timers));
-                            TimerSuccessfulToast("Timer deleted successfully")
-                        }).catch(() => 
-                        TimerUnsuccessfulToast("Failed to delete timer")
-                    )
-                    }}
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                  {isEditable ? 
-                    <>
-                      <DropdownMenuItem onClick={() => saveEdit(row.original.id)}>Save</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => disableRowEditing()}>Stop editing</DropdownMenuItem>
-                    </>
-                    :
-                    <DropdownMenuItem onClick={() => {
-                        setEditableRows(prevState => ({
-                          ...prevState,
-                          [timer.id]: true,
-                        }));
-                      }}
-                    > 
-                      Edit
-                    </DropdownMenuItem>
-                  }
-                </DropdownMenuContent>
+                <TimerDropdownMenuContent 
+                  isEditable={isEditable} 
+                  rowId={timer.id} 
+                  handleDeleteTimer={handleDeleteTimer} 
+                  saveEdit={saveEdit} 
+                  disableRowEditing={disableRowEditing} 
+                  handleEditRow={handleEditRow}
+                />
               </DropdownMenu>
           )
         },
         },
+        
       ]
 
     return (
