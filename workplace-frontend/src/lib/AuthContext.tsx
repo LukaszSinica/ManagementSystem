@@ -7,7 +7,9 @@ type AuthContextType = {
     login: (username: string, password: string) => Promise<boolean>,
     logout: () => void,
     username: string,
-    token: string
+    token: string,
+    authority: string[],
+    hasRole: (role: string) => boolean,
 };
 
 
@@ -19,6 +21,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [username, setUsername] = useState<string>("")
 
     const [token, setToken] = useState<string>("")
+    const [authority, setAuthority] = useState<string[]>([])
+
+    const hasRole = (role: string) => authority.includes(role);
 
     const login = async (username: string, password: string) => {    
         try {
@@ -30,6 +35,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setAuthenticated(true)
                 setUsername(username)
                 setToken(jwtToken)
+                setAuthority(response.data.authority)
 
                 apiClient.interceptors.request.use(
                     (config) => {
@@ -55,10 +61,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setAuthenticated(false)
         setToken("")
         setUsername("")
+        setAuthority([]);
     };
 
     return (
-        <AuthContext.Provider value={ {isAuthenticated, login, logout, username, token}  }>
+        <AuthContext.Provider value={ {isAuthenticated, login, logout, username, token, authority, hasRole}  }>
             {children}
         </AuthContext.Provider>
     );

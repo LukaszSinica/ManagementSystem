@@ -7,6 +7,7 @@ import Home from './components/home/Home'
 import { AuthenticatedRoute } from './components/AuthenticatedRoute'
 import Header from './components/header/Header'
 import Timer from './components/timer/Timer'
+import { AuthenticatedRoutePaths } from './lib/RoutePaths'
 
 function App() {
 
@@ -17,16 +18,7 @@ function App() {
         <Routes>
           <Route path='/' element={<LoginComponent/>}/>
           <Route path='/login' element={<LoginComponent/>}/>
-          <Route path='/home' element={
-            <AuthenticatedRoute>
-              <Home/>
-            </AuthenticatedRoute>
-          } />
-          <Route path='/timer' element={
-            <AuthenticatedRoute>
-              <Timer/>
-            </AuthenticatedRoute>
-          } />
+          {AuthenticatedRoutePaths}
         </Routes>
       </BrowserRouter>
       <Toaster />

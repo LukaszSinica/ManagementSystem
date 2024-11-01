@@ -2,12 +2,18 @@ import { useAuth } from '@/lib/AuthContext';
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 
-export const AuthenticatedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
+type AuthenticatedRouteProps = {
+    children: ReactNode;
+    requiredRole?: string;
+}
+
+
+export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, requiredRole }) => {
 
     const auth = useAuth();
-    
-    if(auth?.isAuthenticated) {
-        return children;
+    console.log(requiredRole);
+    if (auth?.isAuthenticated && (!requiredRole || auth.hasRole(requiredRole))) {
+        return <>{children}</>;
     }
 
     return (

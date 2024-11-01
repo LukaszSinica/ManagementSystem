@@ -34,9 +34,12 @@ public class JwtAuthenticationController {
                 authenticationManager.authenticate(authenticationToken);
         
         var token = tokenService.generateToken(authentication);
+        var authorities = authentication.getAuthorities()
+                .stream()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .toList();
         
-        return ResponseEntity.ok(new JwtTokenResponse(token));
+        return ResponseEntity.ok(new JwtTokenResponse(token, authorities));
     }
 }
-
 
