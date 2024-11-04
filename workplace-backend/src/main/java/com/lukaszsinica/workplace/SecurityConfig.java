@@ -59,6 +59,7 @@ public class SecurityConfig {
 					(authorize) -> authorize
 					.requestMatchers("/authenticate").permitAll()
 					.requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
+					.requestMatchers(HttpMethod.OPTIONS,"/users**").hasAuthority("ROLE_ADMINISTRATOR")
 					.anyRequest().authenticated()
 				
 				)
