@@ -104,7 +104,7 @@ public class SecurityConfig {
 				.username("admin")
 				.password(passwordEncoder.encode("password"))
 				.roles("USER", "ADMIN")
-				.authorities("ROLE_ADMINISTRATOR", "ROLE_USER")
+				.authorities("ROLE_ADMINISTRATOR")
 				.build();
 		userDetailsManager.createUser(admin);
 

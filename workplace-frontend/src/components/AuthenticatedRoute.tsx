@@ -11,7 +11,7 @@ type AuthenticatedRouteProps = {
 export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, requiredRole }) => {
 
     const auth = useAuth();
-    console.log(requiredRole);
+
     if (auth?.isAuthenticated && (!requiredRole || auth.hasRole(requiredRole))) {
         return <>{children}</>;
     }
