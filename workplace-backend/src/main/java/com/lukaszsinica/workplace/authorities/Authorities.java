@@ -1,5 +1,7 @@
 package com.lukaszsinica.workplace.authorities;
 
+import org.springframework.security.core.GrantedAuthority;
+
 import com.lukaszsinica.workplace.users.Users;
 
 import jakarta.persistence.Entity;
@@ -12,7 +14,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name="authorities")
-public class Authorities {
+public class Authorities implements GrantedAuthority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +26,7 @@ public class Authorities {
     
 	private String authority;
 	
-	protected Authorities() {}
+	public Authorities() {}
 	
 	public Authorities(Long id, Users user, String authority) {
 		super();

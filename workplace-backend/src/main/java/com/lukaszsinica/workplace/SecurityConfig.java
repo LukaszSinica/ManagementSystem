@@ -20,10 +20,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,8 +34,6 @@ import org.springframework.security.oauth2.server.resource.web.access.BearerToke
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -45,13 +41,12 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
-import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
+	
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.cors(Customizer.withDefaults())
@@ -84,29 +79,7 @@ public class SecurityConfig {
 	@Bean
 	UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
 		JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
-
-		if (userDetailsManager.userExists("user")) {
-			userDetailsManager.deleteUser("user");
-		}
 		
-		if (userDetailsManager.userExists("admin")) {
-			userDetailsManager.deleteUser("admin");
-		}
-		UserDetails user = User.builder()
-				.username("user")
-				.password(passwordEncoder.encode("password"))
-				.roles("USER")
-				.authorities("ROLE_USER")
-				.build();
-		userDetailsManager.createUser(user);
-
-		UserDetails admin = User.builder()
-				.username("admin")
-				.password(passwordEncoder.encode("password"))
-				.roles("USER", "ADMIN")
-				.authorities("ROLE_ADMINISTRATOR")
-				.build();
-		userDetailsManager.createUser(admin);
 
 		return userDetailsManager;
 	}
