@@ -35,6 +35,10 @@ import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.lukaszsinica.workplace.authorities.Authorities;
+import com.lukaszsinica.workplace.authorities.AuthoritiesRepository;
+import com.lukaszsinica.workplace.users.Users;
+import com.lukaszsinica.workplace.users.UsersRepository;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -77,9 +81,22 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
-		JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
+	UserDetailsManager users(DataSource dataSource, UsersRepository usersRepository, AuthoritiesRepository authoritiesRepository, PasswordEncoder passwordEncoder) {
+		CustomJdbcUserDetailsManager userDetailsManager = new CustomJdbcUserDetailsManager(dataSource, usersRepository, authoritiesRepository);
 		
+		Users user = new Users("user", "user@workplace.com", passwordEncoder.encode("password"), true, null);
+		Authorities userAuthorities = new Authorities();
+		userAuthorities.setAuthority("ROLE_USER");
+		userAuthorities.setUser(user);
+        user.setAuthority(userAuthorities);
+        userDetailsManager.createUserWithDetails(user);
+
+        Users admin = new Users("admin", "admin@workplace.com", passwordEncoder.encode("password"), true, null);
+		Authorities adminAuthorities = new Authorities();
+		adminAuthorities.setAuthority("ROLE_ADMINISTRATOR");
+		adminAuthorities.setUser(admin);
+		admin.setAuthority(adminAuthorities);
+        userDetailsManager.createUserWithDetails(admin);
 
 		return userDetailsManager;
 	}

@@ -30,14 +30,14 @@ public class Users implements UserDetails{
 	
 	@JsonIgnore
 	private String password;
-	private boolean enabled;
+	private Boolean enabled;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Authorities authority;
 	
 	public Users() {}
 	
-	public Users(String username, String email, String password, boolean enabled, Authorities authority) {
+	public Users(String username, String email, String password, Boolean enabled, Authorities authority) {
 		super();
 		this.username = username;
 		this.email = email;
@@ -74,7 +74,11 @@ public class Users implements UserDetails{
 		return enabled;
 	}
 	
-	public void setEnabled(boolean enabled) {
+	public Boolean getEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(Boolean enabled) {
 		this.enabled = enabled;
 	}
 
