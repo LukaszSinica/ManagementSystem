@@ -1,10 +1,5 @@
 package com.lukaszsinica.workplace.users;
 
-
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lukaszsinica.workplace.authorities.Authorities;
@@ -16,12 +11,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import java.util.Collection;
-import java.util.Collections;
-
 @Entity
 @Table(name = "users")
-public class Users implements UserDetails{
+public class Users {
 
 	@Id
 	private String username;
@@ -92,10 +84,6 @@ public class Users implements UserDetails{
 		this.authority = authority;
 	}
 	
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(authority);
-    }
 
 	@Override
 	public String toString() {
