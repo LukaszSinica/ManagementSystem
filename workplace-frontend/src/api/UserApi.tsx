@@ -4,6 +4,8 @@ export type RetrieveUsersResponse = [
     username: string,
     authority: string,
     enabled: boolean,
+    email: string,
+    phone: Number,
 ]
 
 export const retrieveUsers = (token: string) =>

@@ -12,6 +12,7 @@ export default function Users() {
 
   useEffect(() => {
     retrieveUsers(auth.token).then((data) => {
+      console.log(data);
       setUsersData(data.data)
   })
   },[auth.username, auth.token]);
@@ -21,6 +22,19 @@ export default function Users() {
     {
       accessorKey: "username",
       header: "Username",
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+    },
+    {
+      accessorKey: "phone",
+      header: "Phone",
+      cell: ({row}) => {
+        const phoneNumber = row.original.phone.toString()
+        const formattedPhoneNumber = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+        return formattedPhoneNumber;
+      }
     },
     {
       accessorKey: "authority",

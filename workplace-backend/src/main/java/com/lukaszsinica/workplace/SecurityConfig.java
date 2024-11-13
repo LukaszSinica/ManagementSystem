@@ -4,6 +4,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -39,6 +40,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 
+import com.lukaszsinica.workplace.users.Users;
+import com.lukaszsinica.workplace.users.UsersRepository;
+import com.lukaszsinica.workplace.usersdetails.UsersDetailsService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -82,33 +86,32 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder) {
+	UserDetailsManager users(DataSource dataSource, PasswordEncoder passwordEncoder, UsersRepository usersRepository, UsersDetailsService usersDetailsService) {
 		JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
 
-		if (userDetailsManager.userExists("user")) {
-			userDetailsManager.deleteUser("user");
+		if (!userDetailsManager.userExists("user")) {
+			UserDetails user = User.builder()
+					.username("user")
+					.password(passwordEncoder.encode("password"))
+					.authorities("ROLE_USER")
+					.build();
+			userDetailsManager.createUser(user);
+
+			Optional<Users> createdUser = usersRepository.findById("user");
+			usersDetailsService.createDetailsForUser(createdUser.get());
 		}
 		
-		if (userDetailsManager.userExists("admin")) {
-			userDetailsManager.deleteUser("admin");
+		if (!userDetailsManager.userExists("admin")) {
+			UserDetails admin = User.builder()
+					.username("admin")
+					.password(passwordEncoder.encode("password"))
+					.authorities("ROLE_ADMINISTRATOR")
+					.build();
+			userDetailsManager.createUser(admin);
+			Optional<Users> createdAdmin = usersRepository.findById("admin");
+			usersDetailsService.createDetailsForUser(createdAdmin.get());
 		}
 		
-		UserDetails user = User.builder()
-				.username("user")
-				.password(passwordEncoder.encode("password"))
-				.roles("USER")
-				.authorities("ROLE_USER")
-				.build();
-		userDetailsManager.createUser(user);
-
-		UserDetails admin = User.builder()
-				.username("admin")
-				.password(passwordEncoder.encode("password"))
-				.roles("USER", "ADMIN")
-				.authorities("ROLE_ADMINISTRATOR")
-				.build();
-		userDetailsManager.createUser(admin);
-
 		return userDetailsManager;
 	}
 
