@@ -71,8 +71,7 @@ public class SecurityConfig {
 			.csrf(AbstractHttpConfigurer::disable)
 			.sessionManagement(
                     session -> 
-                        session.sessionCreationPolicy(
-                            SessionCreationPolicy.STATELESS))
+                        session.maximumSessions(1))
 			.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
 		    .passwordManagement(Customizer.withDefaults())
 			.exceptionHandling(

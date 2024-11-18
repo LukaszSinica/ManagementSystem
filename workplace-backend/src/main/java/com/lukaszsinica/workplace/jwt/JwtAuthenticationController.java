@@ -1,8 +1,11 @@
 package com.lukaszsinica.workplace.jwt;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,16 +28,16 @@ public class JwtAuthenticationController {
             @RequestBody JwtTokenRequest jwtTokenRequest) {
     	
 
-        var authenticationToken = 
+    	UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(
                         jwtTokenRequest.username(), 
                         jwtTokenRequest.password());
         
-        var authentication = 
+        Authentication authentication = 
                 authenticationManager.authenticate(authenticationToken);
         
-        var token = tokenService.generateToken(authentication);
-        var authorities = authentication.getAuthorities()
+        String token = tokenService.generateToken(authentication);
+        List<String> authorities = authentication.getAuthorities()
                 .stream()
                 .map(grantedAuthority -> grantedAuthority.getAuthority())
                 .toList();
