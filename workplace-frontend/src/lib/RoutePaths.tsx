@@ -1,6 +1,7 @@
 import { AuthenticatedRoute } from "@/components/AuthenticatedRoute";
 import Home from "@/components/home/Home";
 import Timer from "@/components/timer/Timer";
+import { TimerProvider } from "@/components/timer/TimerContext";
 import Users from "@/components/users/Users";
 import { Route } from "react-router-dom";
 
@@ -17,7 +18,9 @@ export const AuthenticatedRoutePaths = [
       } />,
       <Route key={"timer"} path='/timer' element={
         <AuthenticatedRoute>
-          <Timer/>
+          <TimerProvider>
+            <Timer/>
+          </TimerProvider>
         </AuthenticatedRoute>
       } />,
       <Route key={"users"} path='/users' element={
