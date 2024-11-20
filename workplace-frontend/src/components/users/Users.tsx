@@ -1,9 +1,10 @@
-import { retrieveUsers, RetrieveUsersResponse } from '@/api/UserApi';
+import { resetPasswordForUser, retrieveUsers, RetrieveUsersResponse } from '@/api/UserApi';
 import { useAuth } from '@/lib/AuthContext';
 import { ColumnDef } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react'
 import { DataTable } from '../ui/DataTable';
 import { getAuthority } from '@/lib/Authority';
+import { Button } from '../ui/button';
 
 export default function Users() {
 
@@ -46,6 +47,20 @@ export default function Users() {
     {
       accessorKey: "enabled",
       header: "IsEnabled"
+    },
+    {
+      accessorKey: "action",
+      header: "Reset Button",
+      cell: ({row}) => {
+        return (
+          <Button
+            className="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md"
+            onClick={() => resetPasswordForUser(row.original.username)}
+          >
+            Reset Password
+          </Button>
+        )
+      }
     }
   ]
 
