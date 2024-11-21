@@ -19,5 +19,9 @@ public class UsersService {
 		usersRepository.save(user);
 	}
 	
-	
+	public void changeUserPassword(String userId, String password) {
+		Users user = usersRepository.findByUsername(userId);
+		user.setPassword(passwordEncoder.encode(password));
+		usersRepository.save(user);
+	}
 }

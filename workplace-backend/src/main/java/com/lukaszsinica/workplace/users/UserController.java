@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.lukaszsinica.workplace.timer.AddTimerRequest;
 import com.lukaszsinica.workplace.timer.Timer;
 
 @RestController
@@ -42,7 +44,7 @@ public class UserController {
 	             
 	}
 	
-	@PutMapping("/users/reset/{username}")
+	@PutMapping("/users/password-reset/{username}")
 	public ResponseEntity<String> resetPasswordByUsername(@PathVariable String username) {
 		Optional<Users> userOpt  = usersRepository.findById(username);
 	    if (userOpt .isEmpty()) {
@@ -54,5 +56,15 @@ public class UserController {
 		return ResponseEntity.ok("password for user: " + username + "  reset");
 	}
 	
-
+	@PutMapping("/users/password-change/{username}")
+	public ResponseEntity<String> resetPasswordByUsername(@PathVariable String username, @RequestBody ChangePasswordRequest request) {
+		Optional<Users> userOpt  = usersRepository.findById(username);
+	    if (userOpt .isEmpty()) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+	    }
+	    
+	    usersService.changeUserPassword(username, request.password());
+	    
+		return ResponseEntity.ok("password for user: " + username + "  was changed");
+	}
 }

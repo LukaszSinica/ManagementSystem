@@ -2,6 +2,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Button } from '../ui/button';
 import { Link } from 'react-router-dom';
 import { Authorities } from '@/lib/Authority';
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '../ui/navigation-menu';
 
 export default function Header() {
     
@@ -23,7 +24,22 @@ export default function Header() {
                 </>
                 }
             </nav>
-            { auth.isAuthenticated && <Button onClick={() => logout()}>Logout</Button> }
+            { auth.isAuthenticated && 
+            <div className='flex'>
+                <NavigationMenu>
+                    <NavigationMenuList>
+                        <NavigationMenuItem>
+                        <NavigationMenuTrigger>{auth.username}</NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                            <Link to={'/users/change-password'} >
+                                Change password
+                            </Link>
+                        </NavigationMenuContent>
+                        </NavigationMenuItem>
+                    </NavigationMenuList>
+                </NavigationMenu>
+                <Button onClick={() => logout()}>Logout</Button>
+            </div> }
         </header>
     ) 
 }
